@@ -55,7 +55,7 @@ O V-Hosta deve apontar para o public "/path/to/mt4/**public**"
 ```
 
 
-*  **Entreda do Hosts**
+*  **Entrada do Hosts**
 
 Adicionar no /etc/hosts/ o domínio do v-host
 
@@ -79,7 +79,9 @@ Caso necessário temos confgurações em config/mt4.ini
 
 ### SSH
 
-São necessários gerar e trocar chaves de criptografia com o servidor para poder te acesso via ssh pela web.
+São necessários  de trocar chaves de criptografia com o servidor para poder te acesso via ssh pela web.
+
+Outra cois necessária é fingerprint de acesso ao servido.
 
 as chaves devem ficar em **filesystem/ssh_keys/<user>/id_rsa...**
 

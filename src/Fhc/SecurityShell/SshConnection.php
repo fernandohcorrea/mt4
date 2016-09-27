@@ -22,11 +22,11 @@ class SshConnection
     private $ssh_auth_pass;
     private $connection;
 
-    public function __construct($ssh_auth_user, $ssh_host, $ssh_server_fp, $ssh_port=22, $ssh_auth_pass=NULL)
+    public function __construct($ssh_auth_user, $ssh_host, $ssh_server_fp=NULL, $ssh_port=22, $ssh_auth_pass=NULL)
     {
         $this->ssh_auth_user = $ssh_auth_user;
         $this->ssh_host = $ssh_host;
-        $this->ssh_server_fp = $ssh_server_fp;
+        $this->ssh_server_fp = (!empty($ssh_server_fp)) ? $ssh_server_fp : NULL;
         $this->ssh_port = (!empty($ssh_port)) ? $ssh_port : 22;
         $this->ssh_auth_pass = (!empty($ssh_auth_pass)) ? $ssh_auth_pass : NULL;
         $this->parseCfg();
@@ -66,7 +66,7 @@ class SshConnection
         }
 
         $fingerprint = ssh2_fingerprint($this->connection, SSH2_FINGERPRINT_MD5 | SSH2_FINGERPRINT_HEX);
-        if (strcmp($this->ssh_server_fp, $fingerprint) !== 0) {
+        if (!is_null($this->ssh_server_fp) && strcmp($this->ssh_server_fp, $fingerprint) !== 0) {
             throw new Exc\RuntimeException('Unable to verify server identity!');
         }
         

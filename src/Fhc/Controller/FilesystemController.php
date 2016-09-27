@@ -3,6 +3,7 @@
 namespace Fhc\Controller;
 
 use Fhc\Bootstrap\DB\Manager;
+
 /**
  * Description of HomeController
  *
@@ -78,11 +79,81 @@ class FilesystemController extends BaseLayoutController
     public function upload()
     {
         $jsonOut = [];
-        
+
         $get = $this->getParamsGet();
         $post = $this->getParamsPost();
         $files = $this->getParamsFiles();
+
+        try {
+
+            if (is_dir($this->cfg['filesystem_root_path'])) {
+                $root_path = realpath($this->cfg['filesystem_root_path']);
+                $root_name = basename($root_path);
+            } else {
+                $root_path = realpath(implode(DS, [
+                    APPATH,
+                    $this->cfg['filesystem_root_path']
+                ]));
+                $root_name = basename($root_path);
+            }
+
+            if (empty($get['node'])) {
+                throw new \Fhc\Exception\RuntimeException('Error path');
+            }
+
+            $fileInfo = $this->getNodeInfoBase64Decode($get['node']);
+
+            $toPath = $fileInfo->getPathname();
+
+            if (!empty($post['directory'])) {
+                $mkdir = $toPath . DS . $post['directory'];
+                if (!is_dir($mkdir) && !is_file($mkdir)) {
+                    mkdir($mkdir);
+                }
+                $toPath = $mkdir;
+            }
+
+            $root_name = basename($root_path);
+
+            $conn = Manager::getInstance()->getConn('mt4');
+
+            foreach ($files as $file) {
+
+                $new_file_path = $toPath . DS . $file['name'];
+                $SplFileInfo = new \SplFileInfo($new_file_path);
+                $chk_file_moved = move_uploaded_file($file['tmp_name'], $new_file_path);
+
+                if ($chk_file_moved) {
+
+                    $name = $SplFileInfo->getFilename();
+                    $chk_method = 'MD5SUM';
+                    $name_md5 = md5(str_replace($root_path, '', $new_file_path));
+                    $md5_file = md5_file($new_file_path);
+
+                    $st = $conn->prepare("insert into files('name','chk_method', 'name_md5', 'md5_file') values (?,?,?,?)");
+                    $st->execute(array($name, $chk_method, $name_md5, $md5_file));
+                }
+            }
+
+            $jsonOut['msg'] = 'Sucesso';
+            $jsonOut['status'] = true;
+        } catch (\Exception $exc) {
+            error_log("Erro de teste de conexao ssh({$exc->getMessage()})");
+            $jsonOut['msg'] = 'Erro de upload' .
+                    $jsonOut['status'] = false;
+        }
+
+        echo json_encode($jsonOut);
+    }
+
+    public function check()
+    {
+        $jsonOut = [];
+        $jsonOut['status'] = false;
+        $jsonOut['msg'] = 'Não executado a checagem';
         
+        $get = $this->getParamsGet();
+
         try {
             
             if (is_dir($this->cfg['filesystem_root_path'])) {
@@ -96,51 +167,93 @@ class FilesystemController extends BaseLayoutController
                 $root_name = basename($root_path);
             }
             
-            if(empty($get['node'])){
-                throw new \Fhc\Exception\RuntimeException('Error path');
-            }
+            
+            $conn = Manager::getInstance()->getConn('mt4');
             
             $fileInfo = $this->getNodeInfoBase64Decode($get['node']);
             
-            $toPath = $fileInfo->getPathname();
+            $pathName =  $fileInfo->getPathname();
             
-            if(!empty($post['directory'])){
-                $mkdir = $toPath. DS. $post['directory'];
-                if(!is_dir($mkdir) && !is_file($mkdir)){
-                    mkdir($mkdir);
+            $name_md5 = md5(str_replace($root_path,'', $pathName));
+            
+            $st = $conn->prepare("select * from files where name_md5 = ?");
+            $result = $st->execute(array($name_md5));
+            
+            if($result){
+                $res = $st->fetchAll(\PDO::FETCH_ASSOC);
+                $row = array_shift($res);
+                
+                $atualMd5 = md5_file($pathName);
+                
+                if(($row['md5_file'] === $atualMd5)){
+                    $jsonOut['status'] = true;
+                    $jsonOut['msg'] = 'Sucesso';
                 }
-                $toPath = $mkdir;
+            
+                
+            } else {
+                $jsonOut['status'] = false;
+                $jsonOut['msg'] = 'Registro de arquivo não encontrado';
+                
             }
             
-            $root_name = basename($root_path);
+        } catch (\Exception $exc) {
+            error_log("Erro de teste de arquivos({$exc->getMessage()})");
+            $jsonOut['msg'] = 'Problemas de acesso a base de arquivos' .
+            $jsonOut['status'] = false;
+        }
 
+        echo json_encode($jsonOut);
+    }
+    
+    public function delete()
+    {
+        $jsonOut = [];
+        $jsonOut['status'] = false;
+        $jsonOut['msg'] = 'Não executado o processo de exclusão';
+        
+        $get = $this->getParamsGet();
+
+        try {
+            
+            if (is_dir($this->cfg['filesystem_root_path'])) {
+                $root_path = realpath($this->cfg['filesystem_root_path']);
+                $root_name = basename($root_path);
+            } else {
+                $root_path = realpath(implode(DS, [
+                    APPATH,
+                    $this->cfg['filesystem_root_path']
+                ]));
+                $root_name = basename($root_path);
+            }
+            
+            
             $conn = Manager::getInstance()->getConn('mt4');
             
-            foreach ($files as $file) {
-    
-                $new_file_path = $toPath . DS . $file['name'];
-                $SplFileInfo = new \SplFileInfo($new_file_path);
-                $chk_file_moved = move_uploaded_file($file['tmp_name'], $new_file_path);
+            $fileInfo = $this->getNodeInfoBase64Decode($get['node']);
+            
+            $pathName =  $fileInfo->getPathname();
+            
+            $name_md5 = md5(str_replace($root_path,'', $pathName));
+            
+            $st = $conn->prepare("delete from files where name_md5 = ?");
+            $result = $st->execute(array($name_md5));
+            
+            if($result){
+                 unlink($pathName);
                 
-                if($chk_file_moved){
-                    
-                    $name = $SplFileInfo->getFilename();
-                    $chk_method = 'MD5SUM';
-                    $name_md5 = md5(str_replace($root_path, '', $new_file_path));
-                    $md5_file = md5($new_file_path);
-
-                    $st = $conn->prepare("insert into files('name','chk_method', 'name_md5', 'md5_file') values (?,?,?,?)");
-                    $st->execute(array($name, $chk_method, $name_md5, $md5_file));
-                    
-                }
+                $jsonOut['status'] = true;
+                $jsonOut['msg'] = 'Excluido com sucesso';
+            } else {
+                unlink($pathName);
+                $jsonOut['status'] = false;
+                $jsonOut['msg'] = 'Registro de arquivo não encontrado';
                 
             }
-
-            $jsonOut['msg'] = 'Sucesso';
-            $jsonOut['status'] = true;
+            
         } catch (\Exception $exc) {
-            error_log("Erro de teste de conexao ssh({$exc->getMessage()})");
-            $jsonOut['msg'] = 'Erro de upload' .
+            error_log("Erro de exclusao de arquivos({$exc->getMessage()})");
+            $jsonOut['msg'] = 'Problemas de acesso a base de arquivos' .
             $jsonOut['status'] = false;
         }
 

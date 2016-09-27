@@ -2,8 +2,11 @@
 
 require_once '../vendor/autoload.php';
 
-define('FHCENV', 'DEV');
+define('FHCENV', 'PROD');
 
+if(FHCENV != 'DEV'){
+    error_reporting(~E_ALL & ~E_NOTICE & ~E_WARNING);
+}
 
 define('DS', DIRECTORY_SEPARATOR);
 

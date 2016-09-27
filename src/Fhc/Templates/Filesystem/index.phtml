@@ -586,7 +586,7 @@
                                                     <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown"><b class="fa fa-tasks"></b></a>
                                                     <ul class="dropdown-menu">
                                                         <li><a data-toggle="modal" href="#modal-upload-id" >Upload</a></li>
-                                                        <li><a href="general.html#">Check files</a></li>
+                                                        <li><a href="javascript:;" id="btn-checkall-id">Check files</a></li>
                                                     </ul>
                                                 </li>
                                             </ul>
@@ -594,7 +594,7 @@
                                     </nav>
                                     <div style="height: 250px; overflow: auto;">
                                         <ul class="todo-list-item ui-sortable filesystem-lista" id="todo-list">
-                                            <!--lista do file system-->
+                                            <!--Tpl: template-file-id-->
                                         </ul>
                                     </div>
                                 </div>
@@ -1250,7 +1250,7 @@
                 <a href='javascript:;' class='file-acao-node' data-isdir='${is_dir}' data-node='${node}'> ${file_name}</a>
             </p>
             <div class="action-todo pull-right clearfix">
-                <a href="javascript:;" class="todo-edit file-acao-check" data-isdir='${is_dir}' data-node='${node}' ><i class="fa fa-check"></i></a>
+                <a href="javascript:;" class="todo-edit file-acao-check" data-isdir='${is_dir}' data-node='${node}' ><i class="fa fa-circle-thin"></i></a>
                 <a href="javascript:;" class="todo-remove file-acao-delete" data-isdir='${is_dir}' data-node='${node}'><i class="fa fa-trash"></i></a>
             </div>
         </li>

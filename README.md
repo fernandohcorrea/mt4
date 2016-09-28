@@ -24,8 +24,8 @@ Usar o composer para autoload do projeto
 O apache/nginx tem de ter acesso de leitura e escrita em **database** e **filesystem**
 
 ```sh
-[/path/to/mt4]$ sudo chown 666  database/ filesystem/ -R
 [/path/to/mt4]$ sudo chown apache:apache  database/ filesystem/ -R
+[/path/to/mt4]$ sudo chown 755  database/ filesystem/ -R
 ```
 
 #### Apache v-host

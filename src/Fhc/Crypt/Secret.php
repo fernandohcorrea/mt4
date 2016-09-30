@@ -9,41 +9,41 @@ namespace Fhc\Crypt;
  */
 class Secret
 {
-    private $cfg;
-    private $master_key;
-
-    public function __construct()
-    {
-        $this->cfg = \Fhc\Config\Loader::get('crypt_*');
-        $this->master_key = $this->cfg['crypt_master_key'];
-    }
-
-
     public function encrypt($plaintext, $encryptionKey)
     {
-        $nonce = $this->generateRandomString(16);
-        $ciphertext = openssl_encrypt(
-                $plaintext, 'aes-256-ctr', $encryptionKey, OPENSSL_RAW_DATA, $nonce
-        );
-        $mac = hash_hmac('sha512', $nonce . $ciphertext, $this->master_key, true);
-        return base64_encode($mac . $nonce . $ciphertext);
+        //$salt = openssl_random_pseudo_bytes(8);
+        $salt = $this->generateRandomString(8);
+        $salted = '';
+        $dx = '';
+        // Salt the key(32) and iv(16) = 48
+        while (strlen($salted) < 48) {
+            $dx = md5($dx.$encryptionKey.$salt, true);
+            $salted .= $dx;
+        }
+        $key = substr($salted, 0, 32);
+        $iv  = substr($salted, 32, 16);
+        $encryptedData = openssl_encrypt($plaintext, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
+        return base64_encode('Salted__' . $salt . $encryptedData);
     }
 
 
     public function decrypt($message, $encryptionKey)
     {
         $message = base64_decode($message);
-        $mac = mb_substr($message, 0, 64, '8bit');
-        $nonce = mb_substr($message, 64, 16, '8bit');
-        $ciphertext = mb_substr($message, 80, null, '8bit');
-
-        $calc = hash_hmac('sha512', $nonce . $ciphertext, $this->master_key, true);
-        if (!hash_equals($calc, $mac)) {
-            throw new Exception('Invalid MAC');
+        $salt = substr($message, 8, 8);
+        $ciphertext = substr($message, 16);
+        $rounds = 3;
+        $data00 = $encryptionKey.$salt;
+        $md5Hash = array();
+        $md5Hash[0] = md5($data00, true);
+        $result = $md5Hash[0];
+        for ($i = 1; $i < $rounds; $i++) {
+            $md5Hash[$i] = md5($md5Hash[$i - 1].$data00, true);
+            $result .= $md5Hash[$i];
         }
-        return openssl_decrypt(
-                $ciphertext, 'aes-256-ctr', $encryptionKey, OPENSSL_RAW_DATA, $nonce
-        );
+        $key = substr($result, 0, 32);
+        $iv  = substr($result, 32, 16);
+        return openssl_decrypt($ciphertext, 'aes-256-cbc', $key, true, $iv);
     }
     
     function generateRandomString($length) {

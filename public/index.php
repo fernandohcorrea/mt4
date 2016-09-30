@@ -2,7 +2,7 @@
 
 require_once '../vendor/autoload.php';
 
-define('FHCENV', 'PROD');
+define('FHCENV', 'DEV');
 
 if(FHCENV != 'DEV'){
     error_reporting(~E_ALL & ~E_NOTICE & ~E_WARNING);

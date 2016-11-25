@@ -7,7 +7,7 @@ use Fhc\Exception as Exc;
 /**
  * Description of SshConnection
  *
- * @author Fernando H Corrêa
+ * @author Fernando H Corrêa <fernandohcorrea(to)gmail.com>
  */
 class SshConnection
 {

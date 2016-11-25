@@ -1,6 +1,7 @@
 /**
  * Author:  fcorrea
  * Created: 25/09/2016
+ * Fernando H Corrêa 
  */
 CREATE TABLE files(
     name_md5 char(100) primary key not null,

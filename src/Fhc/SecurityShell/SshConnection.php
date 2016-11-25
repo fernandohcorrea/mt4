@@ -7,7 +7,7 @@ use Fhc\Exception as Exc;
 /**
  * Description of SshConnection
  *
- * @author fcorrea
+ * @author Fernando H Corrêa
  */
 class SshConnection
 {
@@ -23,6 +23,7 @@ class SshConnection
     private $ssh_auth_pass;
     private $connection;
 
+   
     public function __construct($ssh_auth_user, $ssh_host, $ssh_server_fp = NULL, $ssh_port = 22, $ssh_auth_pass = NULL)
     {
         $this->ssh_auth_user = $ssh_auth_user;
@@ -81,7 +82,7 @@ class SshConnection
          * Caso ssh2_connect não funcione de algum modo e não retorne o motivo
          * use esse comando no terminal : 
          *    # setsebool -P httpd_can_network_connect 1
-         * Isso va liberar o acesso do httpd para as connexões de rede no SELinux
+         * Isso vai liberar o acesso do httpd para as connexões de rede no SELinux
          */
         if (!($this->connection = ssh2_connect($this->ssh_host, $this->ssh_port, $methods, $callbacks))) {
             throw new Exc\RuntimeException('Cannot connect to server');
@@ -105,7 +106,6 @@ class SshConnection
 
     public function exec($cmd)
     {
-        error_log('5');
         if (!($stream = ssh2_exec($this->connection, $cmd))) {
             throw new Exc\RuntimeException('SSH command failed');
         }
